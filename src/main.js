@@ -3,6 +3,7 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store/index'
 import ElUpload from 'element-upload'
 
 Vue.component('el-upload', ElUpload)
@@ -30,6 +31,7 @@ Vue.config.productionTip = false
 new Vue({
   el: '#app',
   router,
+  store,
   components: {App},
   render: h => h(App)
 })

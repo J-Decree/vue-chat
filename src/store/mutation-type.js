@@ -1,0 +1,6 @@
+export const RECEIVE_TOKEN = 'receive_token'
+export const RESET_TOKEN = 'reset_token'
+export const RECEIVE_USERINFO = 'receive_userinfo'
+export const RECEIVE_FRIENDS = 'receive_friends'
+export const RECEIVE_GROUPS = 'receive_groups'
+export const RECEIVE_MESSAGE = 'receive_message'

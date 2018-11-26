@@ -13,10 +13,10 @@
           <div class="on">
             <section>
               <section class="login_message">
-                <input type="tel" maxlength="11" placeholder="QQ号">
+                <input type="tel" maxlength="11" placeholder="QQ号" v-model="qq">
               </section>
               <section class="login_verification">
-                <input type="tel" maxlength="8" placeholder="密码">
+                <input type="password" maxlength="8" placeholder="密码" v-model="password">
                 <div class="switch_button off">
                   <div class="switch_circle"></div>
                   <span class="switch_text">...</span>
@@ -30,7 +30,7 @@
               </section>
             </section>
           </div>
-          <button class="login_submit">登录</button>
+          <button class="login_submit" @click="login()">登录</button>
         </form>
         <a href="javascript:;" class="about_us">关于我们</a>
       </div>
@@ -42,14 +42,49 @@
 </template>
 
 <script>
+  import {mapState} from 'vuex'
+  import {RECEIVE_TOKEN} from "../store/mutation-type";
+  import {reqLogin, reqPostFile} from "../api";
+
   export default {
     name: 'Login',
     props: [],
     components: {},
     data() {
-      return {}
+      return {
+        qq: '',
+        password: '',
+      }
     },
-
+    computed: {
+      ...mapState(['token'])
+    },
+    methods: {
+      async login() {
+        const {qq, password} = this
+        const result = await reqLogin(qq, password)
+        if (result.code === 1000) {
+          const token = result.token
+          this.$store.dispatch(RECEIVE_TOKEN, {token})
+        }
+        else {
+          alert(result.error)
+        }
+      },
+      checkLogin() {
+        if (this.token) {
+          this.$router.replace('/chat')
+        }
+      }
+    },
+    watch: {
+      token() {
+        this.checkLogin()
+      }
+    },
+    mounted() {
+      this.checkLogin()
+    },
   }
 </script>
 

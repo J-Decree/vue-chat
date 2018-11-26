@@ -12,6 +12,7 @@
 <script>
   import ChatPanel from '../components/ChatPanel'
   import FriendsList from '../components/FriendsList'
+  import {mapState} from 'vuex'
 
   export default {
     name: "Chat",
@@ -20,7 +21,20 @@
     data() {
       return {}
     },
-    methods: {}
+    computed: {
+      ...mapState(['token'])
+    },
+    methods: {
+      checkLogin() {
+        if (!this.token) {
+          this.$router.replace('/login')
+        }
+      }
+    },
+    mounted() {
+      // 检测是否登录
+      this.checkLogin()
+    },
   }
 </script>
 
