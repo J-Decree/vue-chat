@@ -135,9 +135,13 @@
       setEnterSend() {
         const vm = this
         let quill = this.$refs.newEditor.quill
-        quill.keyboard.addBinding({key: 'enter'}, {empty: false}, function () {
-          vm.sendMessage()
-        });
+        quill.keyboard.bindings[13].unshift({
+          key: 13,
+          handler: function () {
+            vm.sendMessage()
+            return true
+          }
+        })
       },
       async uploadImage(content) {
         const {token} = this
