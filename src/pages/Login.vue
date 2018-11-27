@@ -44,7 +44,7 @@
 <script>
   import {mapState} from 'vuex'
   import {RECEIVE_TOKEN} from "../store/mutation-type";
-  import {reqLogin, reqPostFile} from "../api";
+  import {reqLogin, reqUserInfo} from "../api";
 
   export default {
     name: 'Login',
@@ -66,24 +66,35 @@
         if (result.code === 1000) {
           const token = result.token
           this.$store.dispatch(RECEIVE_TOKEN, {token})
+          localStorage.setItem('token', token)
+          this.$router.replace('/chat')
         }
         else {
           alert(result.error)
         }
       },
-      checkLogin() {
-        if (this.token) {
-          this.$router.replace('/chat')
+      async autoLogin() {
+        let token = localStorage.getItem('token')
+        if (token) {
+          let res = await reqUserInfo() //测试token有没有过期
+          if (res.code === 1000) {
+            this.$store.dispatch(RECEIVE_TOKEN, {token})
+            this.$router.replace('/chat')
+          }
+          else {
+            //过期了没用，清掉
+            localStorage.clear()
+          }
         }
-      }
+      },
     },
-    watch: {
-      token() {
-        this.checkLogin()
-      }
-    },
+    // watch: {
+    //   token() {
+    //     this.autoLogin()
+    //   }
+    // },
     mounted() {
-      this.checkLogin()
+      this.autoLogin()
     },
   }
 </script>

@@ -1,84 +1,94 @@
 <template>
   <div class="friends-list">
     <div class="list-group-item clearfix user-info">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-      <span class="username">JDcress</span>
-      <a href="" class="pull-right" target="_blank">
-        <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+      <a :href="userinfo.avatar" target="_blank"><span class="avatar">
+                      <img :src="userinfo.avatar" @click="logout()">
+                    </span></a>
+      <span class="username">{{userinfo.username}}</span>
+      <a class="pull-right" @click="logout()">
+        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
       </a>
     </div>
     <ul class="nav nav-tabs">
-      <li :class="{active:now_tab==='friends'}">
-        <a @click="now_tab='friends'"><span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span></a>
+      <li :class="{active:target_type==='friend'}">
+        <a @click="changeTargetType('friend')">
+          <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
+        </a>
       </li>
-      <li :class="{active:now_tab==='groups'}">
-        <a @click="now_tab='groups'"><span class="glyphicon glyphicon-user" aria-hidden="true"></span></a>
+      <li :class="{active:target_type==='group'}">
+        <a @click="changeTargetType('group')">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+        </a>
       </li>
     </ul>
-    <ul class="list-group" v-show="now_tab==='friends'">
-      <li class="list-group-item active clearfix">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-        <span class="username">JDcress</span>
-        <span class="badge">13</span>
+    <ul class="list-group" v-show="target_type==='friend'">
+      <li class="list-group-item clearfix" v-for="(item) in friends"
+          :class="{current:setActive(item.id,'friend')}"
+          @click="changeTarget(item.id)">
+        <a :href="item.avatar" target="_blank"><span class="avatar"><img :src="item.avatar" alt=""></span></a>
+        <span class="username">{{item.username}}</span>
+        <span class="badge tips" :user_id="item.id">13</span>
       </li>
-
-      <li class="list-group-item  clearfix">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-        <span class="username">JDcress</span>
-        <span class="badge">13</span>
-      </li>
-
-      <li class="list-group-item clearfix">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-        <span class="username">JDcress</span>
-        <span class="badge">13</span>
-      </li>
-
-      <li class="list-group-item clearfix">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-        <span class="username">JDcress</span>
-        <span class="badge">13</span>
-      </li>
-
     </ul>
 
-    <ul class="list-group" v-show="now_tab==='groups'">
-      <li class="list-group-item active clearfix">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-        <span class="group-name">JDcress</span>
-      </li>
-
-      <li class="list-group-item  clearfix">
-                    <span class="avatar"><img
-                      src="https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=534477720,3337262027&fm=26&gp=0.jpg"
-                      alt=""></span>
-        <span class="group-name">JDcress</span>
+    <ul class="list-group" v-show="target_type==='group'">
+      <li class="list-group-item  clearfix" v-for="(item) in groups"
+          :class="{current:setActive(item.id,'group')}" @click="changeTarget(item.id)">
+        <a href="item.avatar" target="_blank"><span class="avatar"><img :src="item.avatar" alt=""></span></a>
+        <span class="group-name">{{item.title}}</span>
       </li>
     </ul>
   </div>
 </template>
 
 <script>
+  import {mapState} from 'vuex'
+  import {RECEIVE_USERINFO, RECEIVE_FRIENDS, RECEIVE_GROUPS} from "../store/mutation-type";
+  import {reqLogout} from "../api";
   export default {
     name: "FriendsList",
-    props: [],
+    props: ['target', 'target_type'],
     data() {
-      return {
-        now_tab: 'friends' // friends,groups
+      return {}
+    },
+    computed: {
+      ...mapState(['userinfo', 'friends', 'groups']),
+    },
+    methods: {
+      receive_userinfo() {
+        // 获得用户信息
+        this.$store.dispatch(RECEIVE_USERINFO)
+      },
+      receive_friends() {
+        this.$store.dispatch(RECEIVE_FRIENDS)
+      },
+      receive_groups() {
+        this.$store.dispatch(RECEIVE_GROUPS)
+      },
+      changeTarget(val) {
+        this.$emit('changeTarget', val)
+      },
+      changeTargetType(val) {
+        this.$emit('changeTargetType', val)
+      },
+      setActive(id, type) {
+        // console.log(id, this.target)
+        // console.log(type, this.target_type)
+        return this.target === id && this.target_type === type
+      },
+      async logout() {
+        let res = await reqLogout()
+        if (res.code === 1000) {
+          localStorage.clear()
+          this.$router.replace('/login')
+        }
       }
     },
+    mounted() {
+      this.receive_userinfo()
+      this.receive_friends()
+      this.receive_groups()
+    }
   }
 </script>
 
@@ -149,5 +159,9 @@
     float: right;
     line-height: 40px;
     margin-right: 10px;
+  }
+
+  .current {
+    background: #337ab7;
   }
 </style>

@@ -4,7 +4,7 @@ import {
   RECEIVE_FRIENDS,
   RECEIVE_GROUPS,
   RECEIVE_MESSAGE,
-  RESET_TOKEN
+  RESET_TOKEN,
 } from "./mutation-type";
 import {reqUserInfo, reqFriends, reqGroups} from "../api";
 
@@ -36,8 +36,8 @@ export default {
       commit(RECEIVE_GROUPS, {groups})
     }
   },
-  async [RECEIVE_MESSAGE]({commit}, {message}) {
-    commit(RECEIVE_MESSAGE, {message})
+  async [RECEIVE_MESSAGE]({commit}, {target_type, message}) {
+    commit(RECEIVE_MESSAGE, {target_type, message})
   }
 }
 

@@ -23,7 +23,7 @@ export default {
   [RECEIVE_GROUPS](state, {groups}) {
     state.groups = groups
   },
-  [RECEIVE_MESSAGE](state, {message}) {
-    state.messages.push(message)
+  [RECEIVE_MESSAGE](state, {target_type, message}) {
+    state.messages[target_type].push(message)
   }
 }

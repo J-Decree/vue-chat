@@ -1,7 +1,7 @@
 <template>
   <div class="chat-panel">
     <div class="chat-box-title">
-      朋友名字
+      {{currentTitle}}
     </div>
     <div class="chat-box-window">
       <div class="msg-item clearfix">
@@ -74,20 +74,44 @@
       </div>
     </div>
     <div class="chat-box-msg">
-      <Editor></Editor>
+      <Editor :target="target" :target_type="target_type"></Editor>
     </div>
   </div>
 </template>
 
 <script>
   import Editor from '../components/Editor'
+  import {mapState} from 'vuex'
 
   export default {
     name: "ChatPanel",
     components: {Editor},
-    props: [],
+    props: ['target', 'target_type'],
     data() {
       return {}
+    },
+    computed: {
+      ...mapState(['friends', 'groups']),
+      currentTitle() {
+        if (!this.target)
+          return ''
+
+        const id = this.target
+        if (this.target_type === 'friend') {
+          let obj = this.friends.find((item, index) => {
+            if (item.id === id)
+              return true
+          })
+          return obj.username
+        }
+        else if (this.target_type === 'group') {
+          let obj = this.groups.find((item, index) => {
+            if (item.id === id)
+              return true
+          })
+          return obj.title + ' (群)'
+        }
+      }
     },
   }
 </script>
@@ -166,7 +190,7 @@
     margin: 15px 0;
   }
 
-  .system-msg span{
+  .system-msg span {
     background: #f9f9f9;
     padding: 3px 3px;
   }

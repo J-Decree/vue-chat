@@ -3,14 +3,11 @@
     <el-upload style="display: none"
                name="image"
                class="uploader"
+               action="#"
                :auto-upload="autoUpload"
-               :action="serverUrl"
                :headers="header"
                :show-file-list="false"
-               :on-success="uploadSuccess"
-               :on-error="uploadError"
-               :http-request="myUpload"
-               :before-upload="beforeUpload">
+               :http-request="uploadImage">
       <button slot="trigger" ref="image">上传</button>
     </el-upload>
 
@@ -18,14 +15,11 @@
     <el-upload style="display: none"
                name="file"
                class="uploader"
+               action="#"
                :auto-upload="autoUpload"
-               :action="serverUrl"
                :headers="header"
                :show-file-list="false"
-               :on-success="uploadSuccess"
-               :on-error="uploadError"
-               :http-request="myUpload"
-               :before-upload="beforeUpload">
+               :http-request="uploadFile">
       <button slot="trigger" ref="file">上传</button>
     </el-upload>
 
@@ -47,7 +41,8 @@
 
       <!-- Add subscript and superscript buttons -->
       <button class="ql-image"></button>
-      <button style="outline: none" @click="fileHandler()"><span class="glyphicon glyphicon-file" aria-hidden="true"></span></button>
+      <button style="outline: none" @click="fileHandler()"><span class="glyphicon glyphicon-file"
+                                                                 aria-hidden="true"></span></button>
     </div>
 
     <quill-editor
@@ -59,7 +54,7 @@
       @focus="onEditorFocus($event)"
       @change="onEditorChange($event)">
     </quill-editor>
-    <button class="btn btn-primary pull-right" @click="test()">发送</button>
+    <button class="btn btn-primary pull-right" @click="sendMessage()">发送</button>
   </div>
 
 </template>
@@ -71,34 +66,22 @@
   import "quill/dist/quill.bubble.css";
   import 'quill-emoji/dist/quill-emoji'
   import 'quill-emoji/dist/quill-emoji.css'
-
   // import Delta from 'quill-delta'; //哎
   import Quill from 'quill'
-
-  let Delta = Quill.import('delta');
+  import {RECEIVE_MESSAGE} from "../store/mutation-type";
+  import {reqPostFile, reqPostMessage} from "../api";
+  import {mapState} from 'vuex'
 
   export default {
-    props: {
-      /*编辑器的内容*/
-      value: {
-        type: String
-      },
-      /*图片大小*/
-      maxSize: {
-        type: Number,
-        default: 4000 //kb
-      }
-    },
-
     components: {
       quillEditor,
     },
-
+    props: ['target', 'target_type',],
     data() {
       return {
         autoUpload: true,
-        content: this.value,
-        quillUpdateImg: false, // 根据图片上传状态来确定是否显示loading动画，刚开始是false,不显示
+        content: '',
+        quillUpdateImg: true, // 根据图片上传状态来确定是否显示loading动画，刚开始是false,不显示
         editorOption: {
           theme: "snow", // or 'bubble'
           placeholder: "您想说点什么？",
@@ -107,26 +90,27 @@
             "emoji-toolbar": true,
             "emoji-shortname": true,
             // "emoji-textarea": true,
-
           }
         },
-        serverUrl: "/v1/blog/imgUpload", // 这里写你要上传的图片服务器地址
         header: {
           // token: sessionStorage.token
-        }, // 有的图片服务器要求请求头需要有token
+          // 有的图片服务器要求请求头需要有token
+        },
       }
+    },
+    computed: {
+      ...mapState(['token', 'userinfo'])
     },
     mounted() {
       // 只复制文本内容
       this.setOnlyTextPaste()
       // 设置上传图片的回调函数
       this.setImageHanlder()
-
+      // 设置回车键发送消息
+      this.setEnterSend()
     },
+
     methods: {
-      test() {
-        console.log(this.$refs.newEditor.quill);
-      },
       async imgHandler(state) {
         if (state) {
           //button is clicked
@@ -141,17 +125,40 @@
       },
       setOnlyTextPaste() {
         //  只复制html的文本内容
+        let Delta = Quill.import('delta');
         let quill = this.$refs.newEditor.quill
         quill.clipboard.addMatcher(Node.ELEMENT_NODE, function (node, delta) {
           let plaintext = node.innerText
           return new Delta().insert(plaintext)
         })
       },
-      myUpload(content) {
-        var form = new FormData();
+      setEnterSend() {
+        const vm = this
+        let quill = this.$refs.newEditor.quill
+        quill.keyboard.addBinding({key: 'enter'}, {empty: false}, function () {
+          vm.sendMessage()
+        });
+      },
+      async uploadImage(content) {
+        const {token} = this
+        let form = new FormData();
         form.append("file", content.file);
-        console.log(content)
-        alert('upload')
+        let s = await reqPostFile(token)
+        console.log(s)
+      },
+      async uploadFile(content) {
+        const {token} = this
+        let form = new FormData();
+        form.append("file", content.file);
+        form.append('userinfo_id', this.userinfo.id)
+        form.append('target', this.target)
+        form.append('target_type', this.target_type)
+        let headers = {
+          // 'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Disposition': `attachment; filename=${content.file.name}`
+        }
+        let s = await reqPostFile(token, form, headers)
+        console.log(s)
       },
       onEditorBlur() {
         //失去焦点事件
@@ -163,19 +170,25 @@
         //内容改变事件
         this.$emit("input", this.content);
       },
-
-      // 富文本图片上传前
-      beforeUpload() {
-        // 显示loading动画
-        this.quillUpdateImg = true;
-      },
-
-      uploadSuccess(res, file) {
-        // res为图片服务器返回的数据
-        // 获取富文本组件实例
-      },
-      // 富文本图片上传失败
-      uploadError() {
+      async sendMessage() {
+        const {target, target_type, content} = this
+        const content_type = 'text'
+        if (!target) {
+          alert('请选中发送目标')
+          return
+        }
+        let res = await reqPostMessage({target, target_type, content, content_type})
+        console.log(res)
+        let message = null
+        if (res.code === 1000) {
+          message = res.data
+          message.isMine = true
+        }
+        else {
+          message = {trigger: target, trigger_type: target_type, content: "发送消息失败", content_type: "system"}
+        }
+        console.log(message, target_type)
+        this.$store.dispatch(RECEIVE_MESSAGE, {target_type, message})
       }
     }
   };

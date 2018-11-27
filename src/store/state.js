@@ -1,7 +1,7 @@
 export default {
-  token: null,
+  token: '',
   userinfo: {},
   friends: [],
   groups: [],
-  messages: [],
+  messages: {'friend': [], 'group': []},
 }
