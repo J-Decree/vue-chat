@@ -133,6 +133,7 @@
         })
       },
       setEnterSend() {
+        // 设置回车键发送消息
         const vm = this
         let quill = this.$refs.newEditor.quill
         quill.keyboard.bindings[13].unshift({
@@ -174,22 +175,31 @@
         //内容改变事件
         this.$emit("input", this.content);
       },
+
       async sendMessage() {
         const {target, target_type, content} = this
         const content_type = 'text'
         if (!target) {
           alert('请选中发送目标')
+          this.content = ''
+          return
+        }
+        if (content.trim() === '') {
+          alert('请输入内容')
+          this.content = ''
           return
         }
         let res = await reqPostMessage({target, target_type, content, content_type})
         console.log(res)
         let message = null
         if (res.code === 1000) {
+          this.content = ''
           message = res.data
           message.isMine = true
         }
         else {
           message = {trigger: target, trigger_type: target_type, content: "发送消息失败", content_type: "system"}
+          this.content = content
         }
         console.log(message, target_type)
         this.$store.dispatch(RECEIVE_MESSAGE, {target_type, message})

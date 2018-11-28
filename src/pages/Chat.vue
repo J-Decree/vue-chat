@@ -14,6 +14,7 @@
   import ChatPanel from '../components/ChatPanel'
   import FriendsList from '../components/FriendsList'
   import {mapState} from 'vuex'
+  import {reqHeartbeat, reqMessage} from "../api";
 
   export default {
     name: "Chat",
@@ -31,6 +32,11 @@
       ...mapState(['token'])
     },
     methods: {
+      checkLogin() {
+        if (!this.token) {
+          this.$router.replace('/login')
+        }
+      },
       changeTarget(val) {
         this.target = val
       },
@@ -52,9 +58,23 @@
           this.target = this.pre_group_id
         }
       },
+      resolveMessage(response) {
+        // console.log(res)
+        const res = response.data
+        if (res.code === 1000) {
+          alert(res.data.content)
+        }
+        reqMessage(this.resolveMessage, this.rejectMessage)
+      },
+      rejectMessage(error) {
+        console.log(error)
+      },
     },
     mounted() {
       // 检测是否登录
+      this.checkLogin()
+      // 开启长轮训接收消息
+      reqMessage(this.resolveMessage, this.rejectMessage)
     },
   }
 </script>
