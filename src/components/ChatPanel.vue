@@ -4,72 +4,28 @@
       {{currentTitle}}
     </div>
     <div class="chat-box-window">
-      <div class="msg-item clearfix">
-        <div class="mine-msg">
+      <div class="msg-item clearfix" v-for="(item) in currentMessage">
+        <!--system 消息-->
+        <div class="system-msg" v-if="item.content_type==='system'"><span>{{item.content}}</span></div>
+        <div v-else :class="item.mine_msg===true?'mine-msg':'others-msg'">
           <div class="msg-datetime">2018-4-13 12:23:23</div>
-          <div class="msg-content">JDcress对冯绍峰颠三倒四丰富的</div>
-        </div>
-      </div>
-
-      <div class="msg-item clearfix">
-        <div class="others-msg">
-          <div class="msg-datetime">2018-4-13 12:23:23</div>
-          <div class="msg-content">JDcress对冯绍峰颠三倒四丰富的</div>
-        </div>
-      </div>
-
-      <div class="msg-item clearfix">
-        <div class="mine-msg">
-          <div class="msg-datetime">2018-4-13 12:23:23</div>
-          <div class="msg-content">JDcress对冯绍峰颠三倒四丰富的</div>
-        </div>
-      </div>
-
-      <div class="msg-item clearfix">
-        <div class="mine-msg">
-          <div class="msg-datetime">2018-4-13 12:23:23</div>
-          <a href="https://pic.wenwen.soso.com/p/20101216/20101216172440-1727154787.jpg"
-             target="_blank">
-            <img src="https://pic.wenwen.soso.com/p/20101216/20101216172440-1727154787.jpg">
+          <!-- text 消息-->
+          <div class="msg-content" v-if="item.content_type==='text'"><span v-html="item.content"></span></div>
+          <!-- image 消息-->
+          <a v-if="item.content_type==='image'" :href="item.content.url" target="_blank">
+            <img :src="item.content.url">
           </a>
-        </div>
-      </div>
-
-      <div class="msg-item clearfix">
-        <div class="others-msg">
-          <div class="msg-datetime">2018-4-13 12:23:23</div>
-          <div class="msg-content">JDcress对冯绍峰颠三倒四丰富的</div>
-        </div>
-
-
-        <div class="msg-item clearfix">
-          <div class="others-msg">
-            <div class="msg-datetime">2018-4-13 12:23:23</div>
-            <a href="https://pic.wenwen.soso.com/p/20101216/20101216172440-1727154787.jpg"
-               target="_blank">
-              <img src="https://pic.wenwen.soso.com/p/20101216/20101216172440-1727154787.jpg">
+          <!--file 消息-->
+          <div v-if="item.content_type==='file'" class="msg-file">
+            <a :href="item.content.url" target="_blank">
+              <p class="title">{{item.content.filename}}</p>
+              <div class="opr">
+                <span class="ng-binding">{{item.content.size}}</span>
+                <span class="sep">|</span>
+                <span class="ng-scope">{{item.content.status}}</span>
+              </div>
             </a>
           </div>
-        </div>
-
-        <div class="msg-item clearfix">
-          <div class="others-msg">
-            <div class="msg-datetime">2018-4-13 12:23:23</div>
-            <div class="msg-file">
-              <a href="">
-                <p class="title">五轮书.pdf.pdf</p>
-                <div class="opr">
-                  <span class="ng-binding">6.9MB</span>
-                  <span class="sep">|</span>
-                  <span class="ng-scope">发送失败</span>
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <div class="msg-item clearfix">
-          <div class="system-msg"><span>你 撤回了一条消息 重新编辑</span></div>
         </div>
       </div>
     </div>
@@ -91,7 +47,7 @@
       return {}
     },
     computed: {
-      ...mapState(['friends', 'groups']),
+      ...mapState(['friends', 'groups', 'friend_messages_content', 'group_messages_content']),
       currentTitle() {
         if (!this.target)
           return ''
@@ -111,7 +67,19 @@
           })
           return obj.title + ' (群)'
         }
-      }
+      },
+      currentMessage() {
+        const {target, target_type, friend_messages_content, group_messages_content} = this
+        if (!target) {
+          return ''
+        }
+        if (target_type === 'friend') {
+          return friend_messages_content[target]
+        }
+        else if (target_type === 'group') {
+          return group_messages_content[target]
+        }
+      },
     },
   }
 </script>
@@ -158,6 +126,16 @@
     max-width: 250px;
     min-height: 50px;
     margin: 15px 0;
+  }
+
+  .mine-msg img {
+    float: right;
+    margin: 10px 15px 0px 0px;
+  }
+
+  .others-msg img {
+    float: left;
+    margin: 10px 0px 0px 15px
   }
 
   .mine-msg .msg-content {
@@ -217,7 +195,6 @@
     -webkit-border-radius: 4px;
     min-width: 250px;
     max-width: 300px;
-    margin: 2px;
     position: relative;
     border: 2px solid #b2e281;
   }

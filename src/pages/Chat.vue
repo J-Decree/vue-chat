@@ -15,6 +15,7 @@
   import FriendsList from '../components/FriendsList'
   import {mapState} from 'vuex'
   import {reqHeartbeat, reqMessage} from "../api";
+  import {RECEIVE_MESSAGE} from "../store/mutation-type";
 
   export default {
     name: "Chat",
@@ -62,9 +63,10 @@
         // console.log(res)
         const res = response.data
         if (res.code === 1000) {
-          alert(res.data.content)
+          console.log(res.data.content)
+          const message = res.data
+          this.$store.dispatch(RECEIVE_MESSAGE, {message})
         }
-        reqMessage(this.resolveMessage, this.rejectMessage)
       },
       rejectMessage(error) {
         console.log(error)

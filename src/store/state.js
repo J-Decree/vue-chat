@@ -3,5 +3,6 @@ export default {
   userinfo: {},
   friends: [],
   groups: [],
-  messages: {'friend': [], 'group': []},
+  friend_messages_content: {}, //{1:[{content:'xxxx',content_type:'text'}],2:[]}
+  group_messages_content: {},
 }

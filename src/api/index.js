@@ -1,12 +1,13 @@
 import ajax from './ajax'
 import {comet} from "./ajax";
 import {BASE_URL} from "../setting";
+
 // 用户注册。
 // 参数:username,password
-export const reqRegister = (username, password) => ajax(BASE_URL + '/register/', {username, password}, 'POST')
+export const reqRegister = (username, password) => ajax(BASE_URL + '/register/', {}, {username, password}, 'POST')
 // 用户登录
 // 参数:qq,password
-export const reqLogin = (qq, password) => ajax(BASE_URL + '/login/', {qq, password}, 'POST')
+export const reqLogin = (qq, password) => ajax(BASE_URL + '/login/', {}, {qq, password}, 'POST')
 // 用户登出
 export const reqLogout = () => {
   const token = localStorage.getItem('token')
@@ -33,7 +34,7 @@ export const reqGroups = () => {
 //参数:userinfo_id,content,content_type,target,target_type
 export const reqPostMessage = ({target, target_type, content, content_type}) => {
   const token = localStorage.getItem('token')
-  return ajax(`${BASE_URL}/message/?token=${token}`, {
+  return ajax(`${BASE_URL}/message/`, {token}, {
     content,
     content_type,
     target,
@@ -58,6 +59,13 @@ export const reqHeartbeat = () => {
 //发送文件
 export const reqPostFile = (data, headers) => {
   const token = localStorage.getItem('token')
-  return ajax(`${BASE_URL}/file/?token=${token}`, data, 'POST', headers)
+  console.log(data.get('file'))
+  return ajax(`${BASE_URL}/file/`, {token}, data, 'POST', headers)
+}
+
+//发送图片
+export const reqPostImage = (data, headers) => {
+  const token = localStorage.getItem('token')
+  return ajax(`${BASE_URL}/image/`, {token}, data, 'POST', headers)
 }
 

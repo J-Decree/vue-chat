@@ -2,16 +2,12 @@ import axios from 'axios'
 import qs from 'qs'
 // console.log(data, qs.stringify(data))
 // const HEADER = {'Content-Type': 'application/json'}
-export default function ajax(url, data = {}, method = 'GET', headers = {}) {
-  // data对get请求无效，需要自己拼接
-  if (method === 'GET' && qs.stringify(data)) {
-    data = '?' + qs.stringify(data)
-    url = url + data
-  }
+export default function ajax(url, params = {}, data = {}, method = 'GET', headers = {}) {
   return new Promise(((resolve, reject) => {
     axios({
-      method,
       url,
+      method,
+      params,
       data,
       headers,
     }).then(function (response) {
@@ -23,7 +19,7 @@ export default function ajax(url, data = {}, method = 'GET', headers = {}) {
 }
 
 //长轮训
-export const comet = (resolve, reject, url, data = {}, method = 'GET', headers = {}) => {
+export const comet = (resolve, reject, url, method = 'GET', params = {}, data = {}, headers = {}) => {
   axios({
     method,
     url,
@@ -32,6 +28,7 @@ export const comet = (resolve, reject, url, data = {}, method = 'GET', headers =
   }).then(function (response) {
     //处理
     resolve(response)
+    comet(resolve, reject, url, method, params, data, headers)
   }).catch(function (err) {
     reject(err)
   })

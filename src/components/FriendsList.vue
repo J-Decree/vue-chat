@@ -27,7 +27,7 @@
           @click="changeTarget(item.id)">
         <a :href="item.avatar" target="_blank"><span class="avatar"><img :src="item.avatar" alt=""></span></a>
         <span class="username">{{item.username}}</span>
-        <span class="badge tips" :user_id="item.id">13</span>
+        <span class="badge tips" v-if="currentMessageCount(item.id)">{{currentMessageCount(item.id)}}</span>
       </li>
     </ul>
 
@@ -45,6 +45,7 @@
   import {mapState} from 'vuex'
   import {RECEIVE_USERINFO, RECEIVE_FRIENDS, RECEIVE_GROUPS} from "../store/mutation-type";
   import {reqLogout} from "../api";
+
   export default {
     name: "FriendsList",
     props: ['target', 'target_type'],
@@ -52,7 +53,7 @@
       return {}
     },
     computed: {
-      ...mapState(['userinfo', 'friends', 'groups']),
+      ...mapState(['userinfo', 'friends', 'groups', 'friend', 'friend_messages_content']),
     },
     methods: {
       receive_userinfo() {
@@ -82,8 +83,18 @@
           localStorage.clear()
           this.$router.replace('/login')
         }
+      },
+      currentMessageCount(id) {
+        // 传入用户id,计算该朋友的消息数目
+        if (this.friend_messages_content[id]) {
+          return this.friend_messages_content[id].length
+        }
+        else {
+          return 0
+        }
       }
     },
+
     mounted() {
       this.receive_userinfo()
       this.receive_friends()

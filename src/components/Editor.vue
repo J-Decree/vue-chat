@@ -4,7 +4,6 @@
                name="image"
                class="uploader"
                action="#"
-               :auto-upload="autoUpload"
                :headers="header"
                :show-file-list="false"
                :http-request="uploadImage">
@@ -16,7 +15,6 @@
                name="file"
                class="uploader"
                action="#"
-               :auto-upload="autoUpload"
                :headers="header"
                :show-file-list="false"
                :http-request="uploadFile">
@@ -69,7 +67,7 @@
   // import Delta from 'quill-delta'; //哎
   import Quill from 'quill'
   import {RECEIVE_MESSAGE} from "../store/mutation-type";
-  import {reqPostFile, reqPostMessage} from "../api";
+  import {reqPostFile, reqPostImage, reqPostMessage} from "../api";
   import {mapState} from 'vuex'
 
   export default {
@@ -79,7 +77,6 @@
     props: ['target', 'target_type',],
     data() {
       return {
-        autoUpload: true,
         content: '',
         quillUpdateImg: true, // 根据图片上传状态来确定是否显示loading动画，刚开始是false,不显示
         editorOption: {
@@ -112,6 +109,7 @@
 
     methods: {
       async imgHandler(state) {
+        // 覆写quill工具栏上面的上传图片按钮的点击事件函数
         if (state) {
           //button is clicked
           this.$refs.image.click()
@@ -145,25 +143,58 @@
         })
       },
       async uploadImage(content) {
-        const {token} = this
+        if (!this.target) {
+          alert('请选中发送目标')
+          return
+        }
         let form = new FormData();
         form.append("file", content.file);
-        let s = await reqPostFile(token)
-        console.log(s)
-      },
-      async uploadFile(content) {
-        const {token} = this
-        let form = new FormData();
-        form.append("file", content.file);
-        form.append('userinfo_id', this.userinfo.id)
         form.append('target', this.target)
         form.append('target_type', this.target_type)
-        let headers = {
-          // 'Content-Type': 'application/x-www-form-urlencoded',
-          'Content-Disposition': `attachment; filename=${content.file.name}`
+        // let headers = {
+        //   // 'Content-Type': 'application/x-www-form-urlencoded',
+        //   'Content-Disposition': `attachment; filename=${content.file.name}`
+        // }
+        let headers = {}
+        let res = await reqPostImage(form, headers)
+        console.log(res)
+        let message = null
+        if (res.code === 1000) {
+          message = res.data
+          message.mine_msg = true
         }
-        let s = await reqPostFile(token, form, headers)
-        console.log(s)
+        else {
+          let error = res.error || "发送图片失败"
+          message = {trigger: this.target, trigger_type: this.target_type, content: error, content_type: "system"}
+        }
+        this.$store.dispatch(RECEIVE_MESSAGE, {message})
+      },
+      async uploadFile(content) {
+        if (!this.target) {
+          alert('请选中发送目标')
+          return
+        }
+        let form = new FormData();
+        form.append("file", content.file);
+        form.append('target', this.target)
+        form.append('target_type', this.target_type)
+        // let headers = {
+        //   // 'Content-Type': 'application/x-www-form-urlencoded',
+        //   'Content-Disposition': `attachment; filename=${content.file.name}`
+        // }
+        let headers = {}
+        let res = await reqPostFile(form, headers)
+        console.log(res)
+        let message = null
+        if (res.code === 1000) {
+          message = res.data
+          message.mine_msg = true
+        }
+        else {
+          let error = res.error || "发送文件失败"
+          message = {trigger: this.target, trigger_type: this.target_type, content: error, content_type: "system"}
+        }
+        this.$store.dispatch(RECEIVE_MESSAGE, {message})
       },
       onEditorBlur() {
         //失去焦点事件
@@ -171,17 +202,13 @@
       onEditorFocus() {
         //获得焦点事件
       },
-      onEditorChange() {
-        //内容改变事件
-        this.$emit("input", this.content);
+      onEditorChange(val) {
       },
-
       async sendMessage() {
         const {target, target_type, content} = this
         const content_type = 'text'
         if (!target) {
           alert('请选中发送目标')
-          this.content = ''
           return
         }
         if (content.trim() === '') {
@@ -190,19 +217,18 @@
           return
         }
         let res = await reqPostMessage({target, target_type, content, content_type})
-        console.log(res)
         let message = null
         if (res.code === 1000) {
           this.content = ''
           message = res.data
-          message.isMine = true
+          message.mine_msg = true
         }
         else {
           message = {trigger: target, trigger_type: target_type, content: "发送消息失败", content_type: "system"}
           this.content = content
         }
         console.log(message, target_type)
-        this.$store.dispatch(RECEIVE_MESSAGE, {target_type, message})
+        this.$store.dispatch(RECEIVE_MESSAGE, {message})
       }
     }
   };
