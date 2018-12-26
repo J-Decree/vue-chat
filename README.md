@@ -1,6 +1,6 @@
 # chat
 
-> A Vue.js project
+> 使用vue写的小项目聊天室，旨在测试相关富文本编辑器的好用程度
 
 ## Build Setup
 
@@ -19,3 +19,4 @@ npm run build --report
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+
